@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  area: one
+  algae_level: MyString
+  comment: MyText
+
+two:
+  area: two
+  algae_level: MyString
+  comment: MyText
