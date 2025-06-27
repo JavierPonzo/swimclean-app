@@ -1,23 +1,52 @@
-<div id="map" style="height: 600px;"></div>
+<div class="container py-4">
 
-<% if current_user&.admin? %>
-  <%= form_with model: @area, url: areas_path, local: true do |f| %>
-    <div id="admin-form" class="p-3 bg-light border rounded" style="display: none;">
-      <%= f.label :name %>
-      <%= f.text_field :name %><br>
-      <%= f.hidden_field :lat, id: "area_lat" %>
-      <%= f.hidden_field :lng, id: "area_lng" %><br>
-      <%= f.submit "Add Spot", class: "btn btn-primary" %>
+  <h1 class="text-center mb-4">SwimSafe Lake Constance</h1>
+
+  <div id="map" class="mb-4 rounded" style="height: 500px;"></div>
+
+  <% if current_user&.admin? %>
+    <div class="mb-4">
+      <h5>Add New Swimming Spot</h5>
+      <%= form_with model: @area, url: areas_path, local: true do |f| %>
+        <div id="admin-form" class="row g-2 p-3 bg-white border rounded shadow-sm" style="display: none;">
+          <div class="col-md-4">
+            <%= f.label :name %>
+            <%= f.text_field :name, class: "form-control" %>
+          </div>
+          <%= f.hidden_field :lat, id: "area_lat" %>
+          <%= f.hidden_field :lng, id: "area_lng" %>
+          <div class="col-md-2 d-flex align-items-end">
+            <%= f.submit "Add Spot", class: "btn btn-primary w-100" %>
+          </div>
+        </div>
+      <% end %>
     </div>
   <% end %>
-<% end %>
 
-<%= form_with url: reports_path, local: true do |f| %>
-  <%= f.select :area_id, options_from_collection_for_select(@areas, :id, :name) %>
-  <%= f.select :algae_level, options_for_select(["none", "medium", "high"]) %>
-  <%= f.text_area :comment, placeholder: "Optional comment" %>
-  <%= f.submit "Submit Report", class: "btn btn-success" %>
-<% end %>
+  <div class="mb-4">
+    <h5>Submit Algae Report</h5>
+    <%= form_with url: reports_path, local: true do |f| %>
+      <div class="row g-2">
+        <div class="col-md-4">
+          <%= f.label :area_id, "Beach" %>
+          <%= f.select :area_id, options_from_collection_for_select(@areas, :id, :name), {}, class: "form-select" %>
+        </div>
+        <div class="col-md-4">
+          <%= f.label :algae_level, "Algae Level" %>
+          <%= f.select :algae_level, options_for_select(["none", "medium", "high"]), {}, class: "form-select" %>
+        </div>
+        <div class="col-md-4">
+          <%= f.label :comment %>
+          <%= f.text_field :comment, placeholder: "Optional", class: "form-control" %>
+        </div>
+        <div class="col-md-12 mt-2">
+          <%= f.submit "Submit Report", class: "btn btn-success" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
@@ -47,7 +76,7 @@
 
   map.on('click', function (e) {
     <% if current_user&.admin? %>
-      document.getElementById('admin-form').style.display = 'block';
+      document.getElementById('admin-form').style.display = 'flex';
       document.getElementById('area_lat').value = e.latlng.lat;
       document.getElementById('area_lng').value = e.latlng.lng;
     <% end %>

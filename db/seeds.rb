@@ -1,5 +1,5 @@
 Area.create([
-  -={ name: "Herose", lat: 47.6661, lng: 9.1749 },
+  { name: "Herose", lat: 47.6661, lng: 9.1749 },
   { name: "Schenzer", lat: 47.6615, lng: 9.1780 },
   { name: "Hörnle", lat: 47.6636, lng: 9.1842 }
 ])
