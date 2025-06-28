@@ -1,0 +1,108 @@
+<div id="map" class="mb-4 rounded" style="height: 500px;"></div>
+
+<script>
+  document.addEventListener("turbo:load", () => {
+    const map = L.map('map').setView([47.6636, 9.1842], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    setTimeout(() => map.invalidateSize(), 200);
+
+    const areas = <%= raw areas.to_json(
+      only: [:id, :name, :lat, :lng, :algae_index, :polygon, :water_temperature],
+      methods: [:latest_comments]
+    ) %>;
+
+    areas.forEach(area => {
+      const color = area.algae_index < 0.5 ? 'green' : area.algae_index < 1.5 ? 'yellow' : 'red';
+      const levelLabel = ["Clean", "Medium", "High"][Math.round(area.algae_index)];
+      const commentsHTML = area.latest_comments?.length
+        ? "<br><b>Comments:</b><br>" + area.latest_comments.map(c => `💬 ${c.charAt(0).toUpperCase() + c.slice(1)}`).join("<br>")
+        : "";
+      const tempHTML = area.water_temperature ? `<br>🌡️Water Temp: ${area.water_temperature}°C` : "";
+      const popupContent = `<b>${area.name}</b><br>🌿Algae Level: ${levelLabel}${tempHTML}${commentsHTML}`;
+
+      if (area.polygon?.length) {
+        L.polygon(area.polygon, {
+          color,
+          fillColor: color,
+          fillOpacity: 0.4,
+          weight: 2
+        }).addTo(map).bindPopup(popupContent);
+      } else {
+        L.circleMarker([area.lat, area.lng], {
+          radius: 10,
+          fillColor: color,
+          color: "#000",
+          weight: 1,
+          fillOpacity: 0.8
+        }).addTo(map).bindPopup(popupContent);
+      }
+    });
+
+    // Public click-to-add marker
+    let selectedMarker = null;
+    const publicForm = document.getElementById("public-form");
+    const closeFormBtn = document.getElementById("close-public-form");
+
+    map.on('click', function (e) {
+      if (publicForm) {
+        publicForm.style.display = "block";
+        document.getElementById('public_area_lat').value = e.latlng.lat;
+        document.getElementById('public_area_lng').value = e.latlng.lng;
+      }
+
+      if (selectedMarker) map.removeLayer(selectedMarker);
+
+      selectedMarker = L.marker(e.latlng, { draggable: true }).addTo(map);
+      selectedMarker.bindPopup("New Swimming Spot").openPopup();
+
+      selectedMarker.on("dragend", function (event) {
+        const { lat, lng } = event.target.getLatLng();
+        document.getElementById('public_area_lat').value = lat;
+        document.getElementById('public_area_lng').value = lng;
+      });
+    });
+
+    if (closeFormBtn) {
+      closeFormBtn.addEventListener("click", () => {
+        publicForm.style.display = "none";
+        if (selectedMarker) {
+          map.removeLayer(selectedMarker);
+          selectedMarker = null;
+        }
+      });
+    }
+
+    // Search bar
+    const beachSearch = document.getElementById("beach-search");
+    if (beachSearch) {
+      beachSearch.addEventListener("input", function () {
+        const q = this.value.toLowerCase();
+        const match = areas.find(a => a.name.toLowerCase().includes(q));
+        if (match) {
+          map.setView([match.lat, match.lng], 15);
+        }
+      });
+    }
+
+    // Geolocation
+    const locateBtn = document.getElementById("locate-btn");
+    if (locateBtn) {
+      locateBtn.addEventListener("click", () => {
+        if (!navigator.geolocation) return alert("Geolocation not supported");
+        navigator.geolocation.getCurrentPosition((pos) => {
+          const { latitude, longitude } = pos.coords;
+          map.setView([latitude, longitude], 15);
+          L.circle([latitude, longitude], {
+            radius: 50,
+            color: "blue",
+            fillColor: "#30f",
+            fillOpacity: 0.3
+          }).addTo(map).bindPopup("You are here").openPopup();
+        });
+      });
+    }
+  });
+</script>

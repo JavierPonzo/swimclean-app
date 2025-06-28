@@ -1,5 +1,5 @@
 <div class="container py-4">
-  <h1 class="text-center display-5 fw-bold mb-3">💦 SwimSafe Lake Constance</h1>
+  <h1 class="text-center display-5 fw-bold mb-3">🌊 SwimClean Lake Constance</h1>
   <p class="text-center text-muted mb-4">Find your favorite beach. Report algae. Keep the lake comfy for everyone. 🫧</p>
 
   <div class="row text-center mb-5">
@@ -26,10 +26,11 @@
     <button id="locate-btn" class="btn btn-outline-primary">📍 Use My Location</button>
   </div>
 
+  <%= turbo_frame_tag "map-frame" do %>
+    <%= render partial: "shared/map", locals: { areas: @areas } %>
+  <% end %>
 
-  <div id="map" class="mb-4 rounded" style="height: 500px;"></div>
-
-  <%= form_with model: Area.new, url: areas_path, local: true do |f| %>
+  <%= form_with model: Area.new, url: areas_path, local: false do |f| %>
     <div id="public-form" class="card shadow-sm mb-4" style="display: none;">
     <div class="card-header d-flex justify-content-between align-items-center">
       <strong>Add New Swimming Spot</strong>
@@ -63,7 +64,7 @@
 
   <div class="mb-4">
     <h5>Submit Algae Report</h5>
-    <%= form_with model: Report.new, url: reports_path, local: true do |f| %>
+    <%= form_with model: Report.new, url: reports_path, local: false do |f| %>
       <div class="row g-2">
         <div class="col-md-4">
           <%= f.label :area_id, "Beach" %>
@@ -89,173 +90,43 @@
     <span class="badge bg-warning text-dark me-2">🟡 It's Okay</span>
     <span class="badge bg-danger">🔴 Lots of Algae</span>
   </div>
+
+    <!-- Testimonials and Trust Section -->
+  <div class="mt-5 pt-4 border-top">
+    <div class="text-center mb-4">
+      <h4 class="fw-bold">What Locals Say</h4>
+      <p class="text-muted">Real swimmers. Real experiences.</p>
+    </div>
+
+    <div class="row text-center g-4 mb-5">
+      <div class="col-md-4">
+        <div class="p-3 bg-light rounded shadow-sm h-100">
+          <p class="fst-italic">"Thanks to this app, I always know where it’s safe to swim. Super useful during summer!"</p>
+          <strong>— Anna, Kreuzlingen</strong>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-3 bg-light rounded shadow-sm h-100">
+          <p class="fst-italic">"My kids love Hörnle beach, and now I feel more confident letting them swim there."</p>
+          <strong>— Markus, Konstanz</strong>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-3 bg-light rounded shadow-sm h-100">
+          <p class="fst-italic">"Great initiative. Reporting green water is easy and helps everyone!"</p>
+          <strong>— Julia, Meersburg</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mb-5">
+      <h5 class="fw-bold mb-3">Trusted by locals & nature lovers 🏞️</h5>
+      <div class="d-flex justify-content-center gap-4 flex-wrap">
+        <img src="https://img.shields.io/badge/Verified%20Data-Live-blue?style=for-the-badge" alt="Verified Data" />
+        <img src="https://img.shields.io/badge/Community%20Driven-100%25-green?style=for-the-badge" alt="Community Driven" />
+        <img src="https://img.shields.io/badge/Lake%20Safe%20Project-Supported-lightgrey?style=for-the-badge" alt="Lake Safe Project" />
+      </div>
+    </div>
+  </div>
+
 </div>
-
-<!-- Leaflet JS/CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-
-<script>
-  const map = L.map('map').setView([47.6636, 9.1842], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  const areas = <%= raw @areas.to_json(
-    only: [:id, :name, :lat, :lng, :algae_index, :polygon, :water_temperature],
-    methods: [:latest_comments]
-  ) %>;
-
-  console.log(areas);
-
-  areas.forEach(area => {
-    let color = area.algae_index < 0.5 ? 'green' : (area.algae_index < 1.5 ? 'yellow' : 'red');
-    let levelLabel = ["Clean", "Medium", "High"][Math.round(area.algae_index)];
-
-    let commentsHTML = "";
-    if (area.latest_comments && area.latest_comments.length > 0) {
-      commentsHTML = "<br><b>Comments:</b><br>" + area.latest_comments.map(c => {
-      const cap = c.charAt(0).toUpperCase() + c.slice(1);
-      return `💬 ${cap}`;
-      }).join("<br>");
-    }
-
-    let tempHTML = area.water_temperature ? `<br>🌡️Water Temp: ${area.water_temperature}°C` : "";
-
-    const popupContent = `<b>${area.name}</b><br>🌿Algae Level: ${levelLabel}${tempHTML}${commentsHTML}`;
-
-    if (area.polygon && area.polygon.length > 0) {
-      L.polygon(area.polygon, {
-        color,
-        fillColor: color,
-        fillOpacity: 0.4,
-        weight: 2
-      }).addTo(map).bindPopup(popupContent);
-    } else {
-      L.circleMarker([area.lat, area.lng], {
-        radius: 10,
-        fillColor: color,
-        color: "#000",
-        weight: 1,
-        fillOpacity: 0.8
-      }).addTo(map).bindPopup(popupContent);
-    }
-  });
-
-
-  // Public click-to-add marker
-  let selectedMarker = null;
-  map.on('click', function (e) {
-    const form = document.getElementById('public-form');
-    if (form) {
-      form.style.display = 'flex';
-      document.getElementById('public_area_lat').value = e.latlng.lat;
-      document.getElementById('public_area_lng').value = e.latlng.lng;
-    }
-
-    if (selectedMarker) map.removeLayer(selectedMarker);
-
-    selectedMarker = L.marker(e.latlng, { draggable: true }).addTo(map);
-    selectedMarker.bindPopup("New Swimming Spot").openPopup();
-
-    selectedMarker.on("dragend", function (event) {
-      const { lat, lng } = event.target.getLatLng();
-      document.getElementById('public_area_lat').value = lat;
-      document.getElementById('public_area_lng').value = lng;
-    });
-  });
-
-  // Admin-only drawing
-  <% if current_user&.admin? %>
-    const drawnItems = new L.FeatureGroup();
-    map.addLayer(drawnItems);
-
-    const drawControl = new L.Control.Draw({
-      draw: {
-        polygon: {
-          allowIntersection: false,
-          showArea: true,
-          shapeOptions: { color: 'blue' }
-        },
-        polyline: false,
-        circle: false,
-        rectangle: false,
-        marker: false,
-        circlemarker: false
-      },
-      edit: { featureGroup: drawnItems }
-    });
-    map.addControl(drawControl);
-
-    map.on(L.Draw.Event.CREATED, function (e) {
-      drawnItems.clearLayers();
-      drawnItems.addLayer(e.layer);
-      const coords = e.layer.getLatLngs()[0].map(c => [c.lat, c.lng]);
-      document.getElementById('area_polygon').value = JSON.stringify(coords);
-    });
-
-    map.on('click', function (e) {
-      document.getElementById('admin-form')?.style?.setProperty('display', 'flex');
-      document.getElementById('area_lat').value = e.latlng.lat;
-      document.getElementById('area_lng').value = e.latlng.lng;
-    });
-  <% end %>
-
-  // Search bar
-  document.getElementById("beach-search").addEventListener("input", function () {
-    const q = this.value.toLowerCase();
-    const match = areas.find(a => a.name.toLowerCase().includes(q));
-    if (match) {
-      map.setView([match.lat, match.lng], 15);
-    }
-  });
-
-  // Geolocation button
-  document.getElementById("locate-btn").addEventListener("click", () => {
-    if (!navigator.geolocation) return alert("Geolocation not supported");
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const { latitude, longitude } = pos.coords;
-      map.setView([latitude, longitude], 15);
-      L.circle([latitude, longitude], {
-        radius: 50,
-        color: "blue",
-        fillColor: "#30f",
-        fillOpacity: 0.3
-      }).addTo(map).bindPopup("You are here").openPopup();
-    });
-  });
-
-  const publicForm = document.getElementById("public-form");
-  const closeFormBtn = document.getElementById("close-public-form");
-
-  map.on('click', function (e) {
-    if (publicForm) {
-      publicForm.style.display = "block";
-      document.getElementById('public_area_lat').value = e.latlng.lat;
-      document.getElementById('public_area_lng').value = e.latlng.lng;
-    }
-
-    if (selectedMarker) map.removeLayer(selectedMarker);
-
-    selectedMarker = L.marker(e.latlng, { draggable: true }).addTo(map);
-    selectedMarker.bindPopup("New Swimming Spot").openPopup();
-
-    selectedMarker.on("dragend", function (event) {
-      const { lat, lng } = event.target.getLatLng();
-      document.getElementById('public_area_lat').value = lat;
-      document.getElementById('public_area_lng').value = lng;
-    });
-  });
-
-  if (closeFormBtn) {
-    closeFormBtn.addEventListener("click", () => {
-      publicForm.style.display = "none";
-      if (selectedMarker) {
-        map.removeLayer(selectedMarker);
-        selectedMarker = null;
-      }
-    });
-  }
-
-</script>
