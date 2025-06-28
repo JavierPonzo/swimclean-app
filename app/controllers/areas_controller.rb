@@ -9,7 +9,6 @@ class AreasController < ApplicationController
   def create
   @area = Area.new(area_params)
 
-  # Case 1: Admins can submit with all fields
   if current_user&.admin?
     if @area.save
       redirect_to root_path, notice: "Area added"
@@ -17,9 +16,7 @@ class AreasController < ApplicationController
       render :index, alert: "Error adding area"
     end
 
-  # Case 2: Public (non-admins or not logged in)
   elsif user_signed_in? == false || (current_user && !current_user.admin?)
-    # Only allow basic lat/lng + name, set default values
     @area.algae_index ||= 0
     @area.polygon = []
 
