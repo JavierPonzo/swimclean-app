@@ -7,14 +7,34 @@ class AreasController < ApplicationController
   end
 
   def create
-    return head :unauthorized unless current_user.admin?
-    @area = Area.new(area_params)
+  @area = Area.new(area_params)
+
+  # Case 1: Admins can submit with all fields
+  if current_user&.admin?
     if @area.save
       redirect_to root_path, notice: "Area added"
     else
       render :index, alert: "Error adding area"
     end
+
+  # Case 2: Public (non-admins or not logged in)
+  elsif user_signed_in? == false || (current_user && !current_user.admin?)
+    # Only allow basic lat/lng + name, set default values
+    @area.algae_index ||= 0
+    @area.polygon = []
+
+    if @area.save
+      redirect_to root_path, notice: "Thank you for adding a new spot!"
+    else
+      @areas = Area.all
+      render 'pages/index', alert: "Could not add your spot"
+    end
+
+  else
+    head :unauthorized
   end
+end
+
 
   private
 

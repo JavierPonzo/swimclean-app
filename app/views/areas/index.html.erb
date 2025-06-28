@@ -2,27 +2,19 @@
   <h1 class="text-center mb-4">SwimSafe Lake Constance</h1>
   <div id="map" class="mb-4 rounded" style="height: 500px;"></div>
 
-  <% if current_user&.admin? %>
-    <div class="mb-4">
-      <h5>Add New Swimming Spot</h5>
-      <%= form_with model: @area, url: areas_path, local: true do |f| %>
-        <div id="admin-form" class="row g-2 p-3 bg-white border rounded shadow-sm" style="display: none;">
-          <div class="col-md-4">
-            <%= f.label :name, "Name" %>
-            <%= f.text_field :name, class: "form-control" %>
-          </div>
-          <%= f.hidden_field :lat, id: "area_lat" %>
-          <%= f.hidden_field :lng, id: "area_lng" %>
-          <%= f.hidden_field :polygon, id: "area_polygon" %>
-          <div class="col-md-4">
-            <%= f.label :algae_index, "Algae Level" %>
-            <%= f.select :algae_index, options_for_select([['None (0)', 0], ['Medium (1)', 1], ['High (2)', 2]]), {}, class: "form-select" %>
-          </div>
-          <div class="col-md-4 d-flex align-items-end">
-            <%= f.submit "Add Spot", class: "btn btn-primary w-100" %>
-          </div>
-        </div>
-      <% end %>
+  <%= form_with model: Area.new, url: areas_path, local: true do |f| %>
+    <div id="public-form" class="row g-2 p-3 bg-white border rounded shadow-sm" style="display: none;">
+      <div class="col-md-4">
+        <%= f.label :name, "Name" %>
+        <%= f.text_field :name, class: "form-control", required: true %>
+      </div>
+      <%= f.hidden_field :lat, id: "public_area_lat" %>
+      <%= f.hidden_field :lng, id: "public_area_lng" %>
+      <%= f.hidden_field :polygon, value: nil %>
+      <%= f.hidden_field :algae_index, value: 0 %>
+      <div class="col-md-4 d-flex align-items-end">
+        <%= f.submit "Add Spot", class: "btn btn-primary w-100" %>
+      </div>
     </div>
   <% end %>
 
@@ -143,4 +135,13 @@ areas.forEach(area => {
       document.getElementById('area_lng').value = e.latlng.lng;
     });
   <% end %>
+
+  map.on('click', function (e) {
+    const publicForm = document.getElementById('public-form');
+    if (publicForm) {
+      publicForm.style.display = 'flex';
+      document.getElementById('public_area_lat').value = e.latlng.lat;
+      document.getElementById('public_area_lng').value = e.latlng.lng;
+    }
+  });
 </script>
