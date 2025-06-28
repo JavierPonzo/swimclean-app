@@ -102,11 +102,28 @@
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  const areas = <%= raw @areas.to_json(only: [:id, :name, :lat, :lng, :algae_index, :polygon]) %>;
+  const areas = <%= raw @areas.to_json(
+    only: [:id, :name, :lat, :lng, :algae_index, :polygon, :water_temperature],
+    methods: [:latest_comments]
+  ) %>;
+
+  console.log(areas);
 
   areas.forEach(area => {
     let color = area.algae_index < 0.5 ? 'green' : (area.algae_index < 1.5 ? 'yellow' : 'red');
     let levelLabel = ["Clean", "Medium", "High"][Math.round(area.algae_index)];
+
+    let commentsHTML = "";
+    if (area.latest_comments && area.latest_comments.length > 0) {
+      commentsHTML = "<br><b>Comments:</b><br>" + area.latest_comments.map(c => {
+      const cap = c.charAt(0).toUpperCase() + c.slice(1);
+      return `💬 ${cap}`;
+      }).join("<br>");
+    }
+
+    let tempHTML = area.water_temperature ? `<br>🌡️Water Temp: ${area.water_temperature}°C` : "";
+
+    const popupContent = `<b>${area.name}</b><br>🌿Algae Level: ${levelLabel}${tempHTML}${commentsHTML}`;
 
     if (area.polygon && area.polygon.length > 0) {
       L.polygon(area.polygon, {
@@ -114,7 +131,7 @@
         fillColor: color,
         fillOpacity: 0.4,
         weight: 2
-      }).addTo(map).bindPopup(`<b>${area.name}</b><br>Algae Level: ${levelLabel}`);
+      }).addTo(map).bindPopup(popupContent);
     } else {
       L.circleMarker([area.lat, area.lng], {
         radius: 10,
@@ -122,9 +139,10 @@
         color: "#000",
         weight: 1,
         fillOpacity: 0.8
-      }).addTo(map).bindPopup(`<b>${area.name}</b><br>Algae Level: ${levelLabel}`);
+      }).addTo(map).bindPopup(popupContent);
     }
   });
+
 
   // Public click-to-add marker
   let selectedMarker = null;

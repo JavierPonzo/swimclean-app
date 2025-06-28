@@ -23,12 +23,15 @@ class ReportsController < ApplicationController
   def calculate_index(area)
     reports = area.reports.last(5)
     levels = reports.map do |r|
-      case r.algae_level
+      case r.algae_level&.downcase
       when "clean" then 0
       when "medium" then 1
       when "high" then 2
       end
-    end
+    end.compact # remove nils
+    return 0 if levels.empty?
+
     levels.sum.to_f / levels.size
   end
+
 end

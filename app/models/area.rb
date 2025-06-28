@@ -11,4 +11,9 @@ class Area < ApplicationRecord
       errors.add(:polygon, "must have at least 3 coordinate points")
     end
   end
+
+  def latest_comments(limit = 3)
+    reports.where.not(comment: [nil, ""]).order(created_at: :desc).limit(limit).pluck(:comment)
+  end
+
 end
