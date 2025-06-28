@@ -24,7 +24,7 @@ class ReportsController < ApplicationController
     reports = area.reports.last(5)
     levels = reports.map do |r|
       case r.algae_level
-      when "none" then 0
+      when "clean" then 0
       when "medium" then 1
       when "high" then 2
       end

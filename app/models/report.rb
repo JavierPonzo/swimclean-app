@@ -6,7 +6,7 @@ class Report < ApplicationRecord
   after_create :update_area_index
 
   def update_area_index
-    value = { 'none' => 0, 'medium' => 1, 'high' => 2 }[algae_level] || 0
+    value = { 'clean' => 0, 'medium' => 1, 'high' => 2 }[algae_level] || 0
     # Seguridad por si es nil
     area.reports_count ||= 0
     area.algae_index ||= 0
