@@ -2,14 +2,15 @@ class ReportsController < ApplicationController
   def create
     @report = Report.new(report_params)
     if @report.save
-      # Update algae index for the area (average or last reported level)
       area = @report.area
-      area.algae_index = calculate_index(area)
-      area.save
+      area.update(algae_index: calculate_index(area).round)
 
+
+      @areas = Area.all
       redirect_to root_path, notice: "Report submitted!"
     else
-      redirect_to root_path, alert: "Failed to submit report."
+      @areas = Area.all
+      render 'pages/index', alert: "Failed to submit report."
     end
   end
 
@@ -20,7 +21,7 @@ class ReportsController < ApplicationController
   end
 
   def calculate_index(area)
-    reports = area.reports.last(5) # or all, if you prefer
+    reports = area.reports.last(5)
     levels = reports.map do |r|
       case r.algae_level
       when "none" then 0

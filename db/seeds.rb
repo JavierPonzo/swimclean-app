@@ -15,22 +15,4 @@ Area.create!([
     ]
   },
   { name: "Herosé", lat: 47.668882, lng: 9.174127, algae_index: 0.0 }
-  {
-    name: "Strandbad Horn",
-    lat: 47.6667572,
-    lng: 9.2148792,
-    algae_index: 0.0
-  },
-  {
-    name: "Strandbad Litzelstetten",
-    lat: 47.71973,
-    lng: 9.177678,
-    algae_index: 0.0
-  },
-  {
-    name: "Rheinstrandbad",
-    lat: 47.6735,
-    lng: 9.1702,
-    algae_index: 0.0
-  }
 ])

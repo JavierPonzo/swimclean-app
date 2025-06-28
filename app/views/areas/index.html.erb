@@ -69,8 +69,17 @@
 
   const areas = <%= raw @areas.to_json %>;
 
-  areas.forEach(area => {
-    const color = area.algae_index === 0 ? 'green' : area.algae_index === 1 ? 'yellow' : 'red';
+areas.forEach(area => {
+    let color;
+    if (area.algae_index < 0.5) {
+      color = 'green';
+    } else if (area.algae_index < 1.5) {
+      color = 'yellow';
+    } else {
+      color = 'red';
+    }
+
+    const levelLabel = ["None", "Medium", "High"][Math.round(area.algae_index)];
 
     if (area.polygon && area.polygon.length > 0) {
       L.polygon(area.polygon, {
@@ -80,7 +89,7 @@
         weight: 2
       }).addTo(map).bindPopup(`
         <b>${area.name}</b><br>
-        Algae Level: ${["None", "Medium", "High"][area.algae_index]}
+        Algae Level: ${levelLabel}
       `);
     } else {
       L.circleMarker([area.lat, area.lng], {
@@ -91,10 +100,11 @@
         fillOpacity: 0.8
       }).addTo(map).bindPopup(`
         <b>${area.name}</b><br>
-        Algae Level: ${["None", "Medium", "High"][area.algae_index]}
+        Algae Level: ${levelLabel}
       `);
     }
   });
+
 
   <% if current_user&.admin? %>
     const drawnItems = new L.FeatureGroup();
