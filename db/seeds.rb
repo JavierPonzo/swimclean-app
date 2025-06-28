@@ -1,16 +1,36 @@
+Area.destroy_all
+
 Area.create!([
-  { name: "Hörnie", lat: 47.6636, lng: 9.1842, algae_index: 0.2 },
-  { name: "Schenzer", lat: 47.6650, lng: 9.1700, algae_index: 0.8 },
-  { name: "Herose", lat: 47.6600, lng: 9.1600, algae_index: 1.4 }
+  { name: "Hörnle", lat: 47.665028, lng: 9.219556, algae_index: 0.2 },
+  {
+    name: "Schänzle",
+    lat: 47.668917,
+    lng: 9.159306,
+    algae_index: 1,
+    polygon: [
+      [47.6691, 9.1590],
+      [47.6693, 9.1597],
+      [47.6686, 9.1600],
+      [47.6685, 9.1592]
+    ]
+  },
+  { name: "Herosé", lat: 47.668882, lng: 9.174127, algae_index: 0.0 }
+  {
+    name: "Strandbad Horn",
+    lat: 47.6667572,
+    lng: 9.2148792,
+    algae_index: 0.0
+  },
+  {
+    name: "Strandbad Litzelstetten",
+    lat: 47.71973,
+    lng: 9.177678,
+    algae_index: 0.0
+  },
+  {
+    name: "Rheinstrandbad",
+    lat: 47.6735,
+    lng: 9.1702,
+    algae_index: 0.0
+  }
 ])
-
-
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end

@@ -19,6 +19,6 @@ class AreasController < ApplicationController
   private
 
   def area_params
-    params.require(:area).permit(:name, :lat, :lng)
+    params.require(:area).permit(:name, :lat, :lng, :algae_index, polygon: [])
   end
 end

@@ -1,7 +1,5 @@
 <div class="container py-4">
-
   <h1 class="text-center mb-4">SwimSafe Lake Constance</h1>
-
   <div id="map" class="mb-4 rounded" style="height: 500px;"></div>
 
   <% if current_user&.admin? %>
@@ -10,12 +8,17 @@
       <%= form_with model: @area, url: areas_path, local: true do |f| %>
         <div id="admin-form" class="row g-2 p-3 bg-white border rounded shadow-sm" style="display: none;">
           <div class="col-md-4">
-            <%= f.label :name %>
+            <%= f.label :name, "Name" %>
             <%= f.text_field :name, class: "form-control" %>
           </div>
           <%= f.hidden_field :lat, id: "area_lat" %>
           <%= f.hidden_field :lng, id: "area_lng" %>
-          <div class="col-md-2 d-flex align-items-end">
+          <%= f.hidden_field :polygon, id: "area_polygon" %>
+          <div class="col-md-4">
+            <%= f.label :algae_index, "Algae Level" %>
+            <%= f.select :algae_index, options_for_select([['None (0)', 0], ['Medium (1)', 1], ['High (2)', 2]]), {}, class: "form-select" %>
+          </div>
+          <div class="col-md-4 d-flex align-items-end">
             <%= f.submit "Add Spot", class: "btn btn-primary w-100" %>
           </div>
         </div>
@@ -25,7 +28,7 @@
 
   <div class="mb-4">
     <h5>Submit Algae Report</h5>
-    <%= form_with url: reports_path, local: true do |f| %>
+    <%= form_with model: Report.new, url: reports_path, local: true do |f| %>
       <div class="row g-2">
         <div class="col-md-4">
           <%= f.label :area_id, "Beach" %>
@@ -46,39 +49,88 @@
     <% end %>
   </div>
 
+  <div class="mb-3 text-center">
+    <span class="badge bg-success">Green = Safe</span>
+    <span class="badge bg-warning text-dark">Yellow = Moderate</span>
+    <span class="badge bg-danger">Red = Risky</span>
+  </div>
 </div>
 
+<!-- Leaflet Draw CSS/JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
 <script>
   const map = L.map('map').setView([47.6636, 9.1842], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data © OpenStreetMap contributors'
+    attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
   const areas = <%= raw @areas.to_json %>;
 
   areas.forEach(area => {
-    const color = area.algae_index < 0.5 ? 'green' : area.algae_index < 1.3 ? 'yellow' : 'red';
-    const marker = L.circleMarker([area.lat, area.lng], {
-      radius: 10,
-      fillColor: color,
-      color: "#000",
-      weight: 1,
-      fillOpacity: 0.8
-    }).addTo(map);
+    const color = area.algae_index === 0 ? 'green' : area.algae_index === 1 ? 'yellow' : 'red';
 
-    marker.bindPopup(`
-      <b>${area.name}</b><br>
-      Algae Index: ${area.algae_index.toFixed(1)}<br>
-      <a href='#' class='btn btn-sm btn-primary'>Report</a>
-    `);
+    if (area.polygon && area.polygon.length > 0) {
+      L.polygon(area.polygon, {
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.4,
+        weight: 2
+      }).addTo(map).bindPopup(`
+        <b>${area.name}</b><br>
+        Algae Level: ${["None", "Medium", "High"][area.algae_index]}
+      `);
+    } else {
+      L.circleMarker([area.lat, area.lng], {
+        radius: 10,
+        fillColor: color,
+        color: "#000",
+        weight: 1,
+        fillOpacity: 0.8
+      }).addTo(map).bindPopup(`
+        <b>${area.name}</b><br>
+        Algae Level: ${["None", "Medium", "High"][area.algae_index]}
+      `);
+    }
   });
 
-  map.on('click', function (e) {
-    <% if current_user&.admin? %>
+  <% if current_user&.admin? %>
+    const drawnItems = new L.FeatureGroup();
+    map.addLayer(drawnItems);
+
+    const drawControl = new L.Control.Draw({
+      draw: {
+        polygon: {
+          allowIntersection: false,
+          showArea: true,
+          shapeOptions: { color: 'blue' }
+        },
+        polyline: false,
+        circle: false,
+        rectangle: false,
+        marker: false,
+        circlemarker: false
+      },
+      edit: {
+        featureGroup: drawnItems
+      }
+    });
+    map.addControl(drawControl);
+
+    map.on(L.Draw.Event.CREATED, function (e) {
+      drawnItems.clearLayers(); // only one polygon at a time
+      drawnItems.addLayer(e.layer);
+
+      const coordinates = e.layer.getLatLngs()[0].map(coord => [coord.lat, coord.lng]);
+      document.getElementById('area_polygon').value = JSON.stringify(coordinates);
+    });
+
+    map.on('click', function (e) {
       document.getElementById('admin-form').style.display = 'flex';
       document.getElementById('area_lat').value = e.latlng.lat;
       document.getElementById('area_lng').value = e.latlng.lng;
-    <% end %>
-  });
+    });
+  <% end %>
 </script>
