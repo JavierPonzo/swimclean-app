@@ -1,3 +1,7 @@
 <%= turbo_stream.replace "map-frame" do %>
   <%= render partial: "shared/map", locals: { areas: Area.all, current_user: current_user } %>
 <% end %>
+
+<%= turbo_stream.replace "report-form" do %>
+  <%= render partial: "reports/form", locals: { report: Report.new, areas: Area.all } %>
+<% end %>

@@ -1,0 +1,19 @@
+<%= form_with model: report, url: reports_path, local: false, id: "report-form" do |f| %>
+  <div class="row g-2">
+    <div class="col-md-4">
+      <%= f.label :area_id, "Beach" %>
+      <%= f.select :area_id, options_from_collection_for_select(areas, :id, :name), {}, class: "form-select" %>
+    </div>
+    <div class="col-md-4">
+      <%= f.label :algae_level, "Algae Level" %>
+      <%= f.select :algae_level, options_for_select(["Clean", "Medium", "High"]), {}, class: "form-select" %>
+    </div>
+    <div class="col-md-4">
+      <%= f.label :comment %>
+      <%= f.text_field :comment, placeholder: "Optional", class: "form-control" %>
+    </div>
+    <div class="col-md-12 mt-2">
+      <%= f.submit "Submit Report", class: "btn btn-success" %>
+    </div>
+  </div>
+<% end %>

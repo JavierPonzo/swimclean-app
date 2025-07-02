@@ -3,7 +3,8 @@ class ReportsController < ApplicationController
     @report = Report.new(report_params)
     if @report.save
       area = @report.area
-      area.update(algae_index: calculate_index(area).round)
+      # Save the raw average, not rounded
+      area.update(algae_index: calculate_index(area))
       @areas = Area.all
 
       respond_to do |format|
@@ -14,7 +15,7 @@ class ReportsController < ApplicationController
       @areas = Area.all
       respond_to do |format|
         format.turbo_stream { render turbo_stream: turbo_stream.replace("map-frame", partial: "shared/map", locals: { areas: @areas }) }
-        format.html { render 'pages/index', alert: "Failed to submit report." }
+        format.html { render 'areas/index', alert: "Failed to submit report." }
       end
     end
   end
@@ -38,5 +39,4 @@ class ReportsController < ApplicationController
 
     levels.sum.to_f / levels.size
   end
-
 end

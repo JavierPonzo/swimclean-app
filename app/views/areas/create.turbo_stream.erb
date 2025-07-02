@@ -1,0 +1,3 @@
+<%= turbo_stream.replace "map-frame" do %>
+  <%= render partial: "shared/map", locals: { areas: Area.all } %>
+<% end %>
