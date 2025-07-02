@@ -4,13 +4,18 @@ class ReportsController < ApplicationController
     if @report.save
       area = @report.area
       area.update(algae_index: calculate_index(area).round)
-
-
       @areas = Area.all
-      redirect_to root_path, notice: "Report submitted!"
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to root_path, notice: "Report submitted!" }
+      end
     else
       @areas = Area.all
-      render 'pages/index', alert: "Failed to submit report."
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("map-frame", partial: "shared/map", locals: { areas: @areas }) }
+        format.html { render 'pages/index', alert: "Failed to submit report." }
+      end
     end
   end
 
