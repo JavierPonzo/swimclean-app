@@ -1,7 +1,11 @@
 <div id="map" class="mb-4 rounded" style="height: 500px;"></div>
 
 <script>
-  document.addEventListener("turbo:load", () => {
+  function initSwimcleanMap() {
+    const mapDiv = document.getElementById('map');
+    if (!mapDiv || mapDiv.dataset.initialized) return;
+    mapDiv.dataset.initialized = "true";
+
     const map = L.map('map').setView([47.6636, 9.1842], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
@@ -104,5 +108,8 @@
         });
       });
     }
-  });
+  }
+
+  document.addEventListener("turbo:load", initSwimcleanMap);
+  document.addEventListener("turbo:frame-load", initSwimcleanMap);
 </script>
